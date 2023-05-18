@@ -1,0 +1,184 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>幂等相关(一) | 远方</title><meta name="keywords" content="技术"><meta name="author" content="penfick"><meta name="copyright" content="penfick"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="日常开发中，有很多例子需要考虑幂等  比如提交form表单时，如果快速点击提交按钮，可能产生了两条一样的数据（前端重复提交，下单，用户注册等）  MQ（消息中间件）消费者读取消息时，有可能会读取到重复消息。（重复消费）   幂等意味着一条请求的唯一性。不管是你哪个方案去设计幂等，都需要一个全局唯一的ID，去标记这个请求是独一无二的。  如果你是利用唯一索引控制幂等，那唯一索引是唯一的 如果你是利用">
+<meta property="og:type" content="article">
+<meta property="og:title" content="幂等相关(一)">
+<meta property="og:url" content="http://example.com/2023/05/17/%E5%B9%82%E7%AD%89%E7%9B%B8%E5%85%B3-%E4%B8%80/index.html">
+<meta property="og:site_name" content="远方">
+<meta property="og:description" content="日常开发中，有很多例子需要考虑幂等  比如提交form表单时，如果快速点击提交按钮，可能产生了两条一样的数据（前端重复提交，下单，用户注册等）  MQ（消息中间件）消费者读取消息时，有可能会读取到重复消息。（重复消费）   幂等意味着一条请求的唯一性。不管是你哪个方案去设计幂等，都需要一个全局唯一的ID，去标记这个请求是独一无二的。  如果你是利用唯一索引控制幂等，那唯一索引是唯一的 如果你是利用">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/subitem.jpg">
+<meta property="article:published_time" content="2023-05-17T08:22:48.000Z">
+<meta property="article:modified_time" content="2023-05-18T08:55:27.833Z">
+<meta property="article:author" content="penfick">
+<meta property="article:tag" content="技术">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/subitem.jpg"><link rel="shortcut icon" href="/img/avatar.png"><link rel="canonical" href="http://example.com/2023/05/17/%E5%B9%82%E7%AD%89%E7%9B%B8%E5%85%B3-%E4%B8%80/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: {"limitCount":50,"languages":{"author":"作者: penfick","link":"链接: ","source":"来源: 远方","info":"著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。"}},
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '幂等相关(一)',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2023-05-18 16:55:27'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.2.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/avatar.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">8</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fa fa-heartbeat"></i><span> 生活</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('/img/subitem.jpg')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">远方</a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fa fa-heartbeat"></i><span> 生活</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">幂等相关(一)</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-05-17T08:22:48.000Z" title="发表于 2023-05-17 16:22:48">2023-05-17</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2023-05-18T08:55:27.833Z" title="更新于 2023-05-18 16:55:27">2023-05-18</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="幂等相关(一)"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><p>日常开发中，有很多例子需要考虑幂等</p>
+<ul>
+<li><p>比如提交form表单时，如果快速点击提交按钮，可能产生了两条一样的数据（前端重复提交，下单，用户注册等）</p>
+</li>
+<li><p>MQ（消息中间件）消费者读取消息时，有可能会读取到重复消息。（<strong>重复消费</strong>）</p>
+</li>
+</ul>
+<p>幂等意味着一条请求的唯一性。不管是你哪个方案去设计幂等，都需要一个<strong>全局唯一的ID</strong>，去标记这个请求是独一无二的。</p>
+<ul>
+<li>如果你是利用唯一索引控制幂等，那唯一索引是唯一的</li>
+<li>如果你是利用数据库主键控制幂等，那主键是唯一的</li>
+<li>如果你是悲观锁的方式，底层标记还是<strong>全局唯一的ID</strong></li>
+</ul>
+<h6 id="幂等设计的基本流程"><a href="#幂等设计的基本流程" class="headerlink" title="幂等设计的基本流程"></a>幂等设计的基本流程</h6><p>幂等处理的过程，说到底其实就是过滤一下已经收到的请求，当然，请求一定要有一个<code>全局唯一的ID标记</code>哈。然后，怎么判断请求是否之前收到过呢？把请求储存起来，收到请求时，先查下存储记录，记录存在就返回上次的结果，不存在就处理请求。</p>
+<p><img src="/images/123.png"></p>
+<h6 id="实现幂等的8种方案"><a href="#实现幂等的8种方案" class="headerlink" title="实现幂等的8种方案"></a>实现幂等的8种方案</h6><p><code>1. select+insert+主键/唯一索引冲突</code></p>
+<p>日常开发中，为了实现交易接口幂等，我是这样实现的：</p>
+<p>交易请求过来，我会先根据请求的<strong>唯一流水号</strong> <code>bizSeq</code>字段，先<code>select</code>一下<strong>数据库的流水表</strong></p>
+<ul>
+<li>如果数据已经存在，就拦截是重复请求，直接返回成功；</li>
+<li>如果数据不存在，就执行<code>insert</code>插入，如果<code>insert</code>成功，则直接返回成功，如果<code>insert</code>产生主键冲突异常，则捕获异常，接着直接返回成功</li>
+</ul>
+<p><code>2.直接insert + 主键/唯一索引冲突</code></p>
+<p>在1方案中，都会先查一下<strong>流水表</strong>的交易请求，判断是否存在，然后不存在再插入请求记录。如果<strong>重复请求的概率比较低</strong>的话，我们可以直接插入请求，利用<strong>主键&#x2F;唯一索引冲突</strong>，去判断是<strong>重复请求</strong>。</p>
+<p><code>3.状态机幂等</code></p>
+<p>很多业务表，都是有状态的，比如转账流水表，就会有0-待处理，1-处理中、2-成功、3-失败状态。转账流水更新的时候，都会涉及流水状态更新，即涉及状态机 (即状态变更图)。我们可以利用状态机实现幂等，一起来看下它是怎么实现的。</p>
+<p>比如转账成功后，把处理中的转账流水更新为成功状态，SQL这么写：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">update</span> transfr_flow <span class="keyword">set</span> status<span class="operator">=</span><span class="number">2</span> <span class="keyword">where</span> biz_seq<span class="operator">=</span>‘<span class="number">666</span>’ <span class="keyword">and</span> status<span class="operator">=</span><span class="number">1</span>;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><code>4.抽取防重表</code></p>
+<p>1和2的方案，都是建立在业务流水表上的唯一性上。很多时候，我们业务表唯一流水号希望后端系统生成，又或者我们希望防重功能与业务表分隔开来，这时候我们可以单独搞个防重表。当然防重表也是利用主键&#x2F;索引的唯一性，如果插入防重表冲突即直接返回成功，如果插入成功，即去处理请求。</p>
+<p><code>5.token令牌</code><br>token 令牌方案一般包括两个请求阶段：<br>客户端请求申请获取token，服务端生成token返回<br>客户端带着token请求，服务端校验token</p>
+<p>流程如下：<br>客户端发起请求，申请获取token。<br>服务端生成全局唯一的token，保存到redis中（一般会设置一个过期时间），然后返回给客户端。<br>客户端带着token，发起请求。<br>服务端去redis确认token是否存在，一般用 redis.del(token)的方式，如果存在会删除成功，即处理业务逻辑，如果删除失败不处理业务逻辑，直接返回结果。</p>
+<p><code>6.悲观锁</code><br>一般配合事务来实现，查询的时候加锁(如select for update)</p>
+<p><code>7.乐观锁</code><br>给表的加多一列version版本号，每次更新记录version都升级一下（version&#x3D;version+1）。具体流程就是先查出当前的版本号version，然后去更新修改数据时，确认下是不是刚刚查出的版本号，如果是才执行更新</p>
+<p><code>8.分布式锁</code><br>分布式锁实现幂等性的逻辑就是，请求过来时，先去尝试获得分布式锁，如果获得成功，就执行业务逻辑，反之获取失败的话，就舍弃请求直接返回成功。</p>
+<p>本文参照引用于<a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/P3GVyHxrSLN4FV2xwnP71g">https://mp.weixin.qq.com/s/P3GVyHxrSLN4FV2xwnP71g</a></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="http://example.com">penfick</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="http://example.com/2023/05/17/%E5%B9%82%E7%AD%89%E7%9B%B8%E5%85%B3-%E4%B8%80/">http://example.com/2023/05/17/%E5%B9%82%E7%AD%89%E7%9B%B8%E5%85%B3-%E4%B8%80/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://penfick.github.io/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://example.com" target="_blank">远方</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%8A%80%E6%9C%AF/">技术</a></div><div class="post_share"><div class="social-share" data-image="/img/subitem.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/gh/overtrue/share.js@master/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2023/05/17/%E5%B9%82%E7%AD%89%E7%9B%B8%E5%85%B3-%E4%BA%8C/"><img class="prev-cover" src="/img/subitem.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">幂等相关(二)</div></div></a></div><div class="next-post pull-right"><a href="/2023/05/17/%E5%87%A0%E4%B8%AA%E7%B3%BB%E7%BB%9F%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87/"><img class="next-cover" src="/img/subitem.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">几个系统性能指标</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2022/06/02/mongo%E8%81%9A%E5%90%88%E7%9A%84%E7%90%86%E8%A7%A3/" title="mongo聚合的理解"><img class="cover" src="/img/subitem.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2022-06-02</div><div class="title">mongo聚合的理解</div></div></a></div><div><a href="/2022/06/02/oracle%E8%BD%ACmysql/" title="oracle转mysql"><img class="cover" src="/img/subitem.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2022-06-02</div><div class="title">oracle转mysql</div></div></a></div><div><a href="/2022/08/03/springboot%E9%9B%86%E6%88%90sftp/" title="springboot集成sftp"><img class="cover" src="/img/subitem.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2022-08-03</div><div class="title">springboot集成sftp</div></div></a></div><div><a href="/2023/05/06/RocketMQ%E6%B6%88%E8%B4%B9%E6%A8%A1%E5%BC%8F/" title="RocketMQ消费模式"><img class="cover" src="/img/subitem.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-05-06</div><div class="title">RocketMQ消费模式</div></div></a></div><div><a href="/2023/05/11/%E5%85%A8%E6%B0%91%E4%BB%98%E6%94%AF%E4%BB%98%E5%AF%B9%E6%8E%A5/" title="全民付支付对接"><img class="cover" src="/img/subitem.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-05-11</div><div class="title">全民付支付对接</div></div></a></div><div><a href="/2023/05/17/%E5%87%A0%E4%B8%AA%E7%B3%BB%E7%BB%9F%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87/" title="几个系统性能指标"><img class="cover" src="/img/subitem.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-05-17</div><div class="title">几个系统性能指标</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">penfick</div><div class="author-info__description">往事如烟似梦，转眼岁月匆匆。</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">8</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-6"><a class="toc-link" href="#%E5%B9%82%E7%AD%89%E8%AE%BE%E8%AE%A1%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%B5%81%E7%A8%8B"><span class="toc-number">1.</span> <span class="toc-text">幂等设计的基本流程</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#%E5%AE%9E%E7%8E%B0%E5%B9%82%E7%AD%89%E7%9A%848%E7%A7%8D%E6%96%B9%E6%A1%88"><span class="toc-number">2.</span> <span class="toc-text">实现幂等的8种方案</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2023/05/17/%E5%B9%82%E7%AD%89%E7%9B%B8%E5%85%B3-%E4%BA%8C/" title="幂等相关(二)"><img src="/img/subitem.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="幂等相关(二)"/></a><div class="content"><a class="title" href="/2023/05/17/%E5%B9%82%E7%AD%89%E7%9B%B8%E5%85%B3-%E4%BA%8C/" title="幂等相关(二)">幂等相关(二)</a><time datetime="2023-05-17T09:29:39.000Z" title="发表于 2023-05-17 17:29:39">2023-05-17</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/05/17/%E5%B9%82%E7%AD%89%E7%9B%B8%E5%85%B3-%E4%B8%80/" title="幂等相关(一)"><img src="/img/subitem.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="幂等相关(一)"/></a><div class="content"><a class="title" href="/2023/05/17/%E5%B9%82%E7%AD%89%E7%9B%B8%E5%85%B3-%E4%B8%80/" title="幂等相关(一)">幂等相关(一)</a><time datetime="2023-05-17T08:22:48.000Z" title="发表于 2023-05-17 16:22:48">2023-05-17</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/05/17/%E5%87%A0%E4%B8%AA%E7%B3%BB%E7%BB%9F%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87/" title="几个系统性能指标"><img src="/img/subitem.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="几个系统性能指标"/></a><div class="content"><a class="title" href="/2023/05/17/%E5%87%A0%E4%B8%AA%E7%B3%BB%E7%BB%9F%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87/" title="几个系统性能指标">几个系统性能指标</a><time datetime="2023-05-17T03:26:18.000Z" title="发表于 2023-05-17 11:26:18">2023-05-17</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/05/11/%E5%85%A8%E6%B0%91%E4%BB%98%E6%94%AF%E4%BB%98%E5%AF%B9%E6%8E%A5/" title="全民付支付对接"><img src="/img/subitem.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="全民付支付对接"/></a><div class="content"><a class="title" href="/2023/05/11/%E5%85%A8%E6%B0%91%E4%BB%98%E6%94%AF%E4%BB%98%E5%AF%B9%E6%8E%A5/" title="全民付支付对接">全民付支付对接</a><time datetime="2023-05-11T09:45:28.000Z" title="发表于 2023-05-11 17:45:28">2023-05-11</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/05/06/RocketMQ%E6%B6%88%E8%B4%B9%E6%A8%A1%E5%BC%8F/" title="RocketMQ消费模式"><img src="/img/subitem.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="RocketMQ消费模式"/></a><div class="content"><a class="title" href="/2023/05/06/RocketMQ%E6%B6%88%E8%B4%B9%E6%A8%A1%E5%BC%8F/" title="RocketMQ消费模式">RocketMQ消费模式</a><time datetime="2023-05-06T02:38:19.000Z" title="发表于 2023-05-06 10:38:19">2023-05-06</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2023 By penfick</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
